@@ -63,10 +63,8 @@ class Splitter(object):
                 clean_word = self._clean_word(word)
                 if clean_word:
                     self.words.append(clean_word)
-                    if word not in self.word_counts_dictionary:
-                        self.word_counts_dictionary[word] = 1
-                    else:
-                        self.word_counts_dictionary[word] += 1
+                    try: self.word_counts_dictionary[word] += 1
+                    except KeyError: self.word_counts_dictionary[word] = 1
 
 
     def _clean_word(self, word, block_stop_words = True):
