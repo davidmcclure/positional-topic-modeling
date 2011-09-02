@@ -80,8 +80,8 @@ class Splitter(object):
                 clean_word = self._clean_word(word)
                 if clean_word:
                     self.words.append(clean_word)
-                    try: self.word_counts_dictionary[word] += 1
-                    except KeyError: self.word_counts_dictionary[word] = 1
+                    try: self.word_counts_dictionary[clean_word] += 1
+                    except KeyError: self.word_counts_dictionary[clean_word] = 1
 
 
 
