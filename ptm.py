@@ -1,6 +1,7 @@
 import re
 import numpy as np
 import memoized as mem
+import comparers
 
 # Force numpy to not truncate arrays when printing them.
 np.set_printoptions(threshold='nan')
@@ -94,7 +95,7 @@ class Text(Splitter):
 
     # Defaults for the ratio to use when deciding whether or not a word is to
     # infrequent to include in the subset vocabulary.
-    DEF_NUMERATOR = 1
+    DEF_NUMERATOR = 3
     DEF_DENOMINATOR = 100000
 
     @mem.memoized
@@ -152,7 +153,7 @@ class Text(Splitter):
         for i,word in enumerate(self.words):
             word_index = self.word_index_dictionary[word]
             if word_index in self.subset_vocab_i:
-                self.subset_text_word_positions.append((word_index, i+1))
+                self.subset_text_word_positions.append((word_index, i))
 
 
     @mem.memoized
