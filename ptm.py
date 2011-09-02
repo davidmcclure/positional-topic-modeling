@@ -1,6 +1,6 @@
 import re
 import numpy as np
-import memoized
+import memoized as mem
 
 # Force numpy to not truncate arrays when printing them.
 np.set_printoptions(threshold='nan')
@@ -14,7 +14,7 @@ class Splitter(object):
 
     # List of punctuation characters to scrub. Omits, the single apostrophe,
     # which is handled separately so as to retain contractions.
-    PUNCTUATION = ['(', ')', ':', ';', ',', '-', '!', '.', '?', '/', '"', '*']
+    PUNCTUATION = ['(', ')', ':', ';', ',', '-', '!', '.', '?', '/', '"', '*', "'"]
 
     # Relative location of line-delimited list of stop words.
     STOP_WORD_PATH = 'stop_words.txt'
@@ -59,7 +59,7 @@ class Splitter(object):
         '''
         word = word.lower()
         for punc in Splitter.PUNCTUATION + Splitter.CARRIAGE_RETURNS:
-            word = word.replace(punc, '').strip("'")
+            word = word.replace(punc, '')
         if not re.match(Splitter.WORD_REGEX, word): word = None
         return word
 
@@ -92,7 +92,7 @@ class Text(Splitter):
     texts strung together.
     '''
 
-    @memoized.memoized
+    @mem.memoized
     def build_unique_vocabulary(self):
         '''
         Construct a list of unique tokens, set number_of_uniques counter.
@@ -103,7 +103,7 @@ class Text(Splitter):
         self.number_of_uniques = len(self.unique_vocabulary)
 
 
-    @memoized.memoized
+    @mem.memoized
     def build_wordcounts_array(self):
         '''
         Construct an array of structure [[word_id(int), wordcount(int)], .. ].
@@ -112,3 +112,14 @@ class Text(Splitter):
         self.word_counts_array = np.zeros([self.number_of_uniques, 1], dtype=int)
         for i,word in enumerate(self.unique_vocabulary):
             self.word_counts_array[i] = self.word_counts_dictionary[word]
+
+
+    @mem.memoized
+    def build_subset_vocabulary(self, numerator, denominator):
+        '''
+        Build a subset of the unique vocabulary to consider when modeling
+        topics. Eliminiate stop words and words with counts that do not cross
+        the numerator/denominator threshold.
+        '''
+        self.build_unique_vocabulary()
+        self.build_wordcounts_array()
