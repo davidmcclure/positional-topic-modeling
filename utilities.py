@@ -9,7 +9,6 @@ def __find_distance_to_nearest_neighbor(list_of_positions, position):
     radii = []
     for i in list_of_positions:
        radii.append(abs(i-position))
-    print radii
     return min(radii)
 
 

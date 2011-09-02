@@ -2,6 +2,7 @@ import re
 import numpy as np
 import memoized as mem
 import comparers
+from operator import itemgetter
 
 # Force numpy to not truncate arrays when printing them.
 np.set_printoptions(threshold='nan')
@@ -95,8 +96,11 @@ class Text(Splitter):
 
     # Defaults for the ratio to use when deciding whether or not a word is to
     # infrequent to include in the subset vocabulary.
-    DEF_NUMERATOR = 3
+    DEF_NUMERATOR = 5
     DEF_DENOMINATOR = 100000
+
+    # Default comparer to user.
+    DEF_COMPARER = '_CMP_closest_neighbor_average_distance'
 
     @mem.memoized
     def build_unique_vocab(self):
@@ -173,3 +177,44 @@ class Text(Splitter):
             for id_pos in self.subset_text_word_positions:
                 if id_pos[0] == i: w_positions.append(id_pos[1])
             self.positions.append(w_positions)
+
+
+    def get_positions_by_word(self, word):
+        '''
+        Return positions list for a word. Return None if word is not present in
+        the subset vocabulary.
+        '''
+        self.build_unique_vocab()
+        self.build_wordcounts_array()
+        self.build_subset_vocab(Text.DEF_NUMERATOR, Text.DEF_DENOMINATOR)
+        self.build_subset_text_word_positions()
+        self.build_positions_list()
+        try:
+            unique_index = self.word_index_dictionary[word]
+            subset_index = self.subset_vocab_i.index(unique_index)
+            return self.positions[subset_index]
+        except KeyError:
+            return None
+
+
+    # console helper
+    def build_positional_similarity_stack_for_word(self, word, truncate=None):
+        '''
+        For the provided word, run through each of the other words and call the
+        specified comparer function. Then, sort the list ascending.
+        '''
+        self.build_unique_vocab()
+        self.build_wordcounts_array()
+        self.build_subset_vocab(Text.DEF_NUMERATOR, Text.DEF_DENOMINATOR)
+        self.build_subset_text_word_positions()
+        self.build_positions_list()
+        scores = [] # tuple of (word_id, score)
+        word_positions = self.get_positions_by_word(word)
+        for j,i in enumerate(self.subset_vocab_i):
+            other_word_positions = self.positions[j]
+            score = getattr(comparers, Text.DEF_COMPARER)(word_positions, other_word_positions)
+            scores.append([self.unique_vocab[i], score])
+        scores = sorted(scores, key=itemgetter(1))
+        if truncate: scores = scores[:truncate]
+        return scores
+
