@@ -1,6 +1,8 @@
 import re
 import numpy as np
 
+# Force numpy to not truncate arrays when printing them.
+np.set_printoptions(threshold='nan')
 
 class Splitter(object):
 
@@ -36,15 +38,20 @@ class Splitter(object):
         '''
         Split file into an ordered list of words. Scrub out punctuation;
         lowercase everything; preserve contractions; disallow strings that
-        include non-letters.
+        include non-letters. En route, build a dictionary of {word: count}.
         '''
         self.lines = [line for line in self.file]
+        self.word_counts_dictionary = {}
         for line in self.lines:
             words = line.split(' ')
             for word in words:
                 clean_word = self._clean_word(word)
                 if clean_word:
                     self.words.append(clean_word)
+                    if word not in self.word_counts_dictionary:
+                        self.word_counts_dictionary[word] = 1
+                    else:
+                        self.word_counts_dictionary[word] += 1
 
 
     def _clean_word(self, word):
@@ -91,10 +98,9 @@ class Text(Splitter):
         Construct a list of unique tokens, set number_of_uniques counter.
         '''
         self._called.add('build_unique_vocabulary')
-        _set = set()
-        for word in self.words:
-            _set.add(word)
-        self.unique_vocabulary = list(_set)
+        self.unique_vocabulary = []
+        for word,count in self.word_counts_dictionary.iteritems():
+            self.unique_vocabulary.append(word)
         self.number_of_uniques = len(self.unique_vocabulary)
 
     def build_wordcounts_array(self):
@@ -103,4 +109,6 @@ class Text(Splitter):
         '''
         self._called.add('build_wordcounts_array')
         self._do_dependencies(['build_unique_vocabulary'])
-        print self.number_of_uniques
+        self.word_counts_array = np.zeros([self.number_of_uniques, 1], dtype=int)
+        for i,word in enumerate(self.unique_vocabulary):
+            self.word_counts_array[i] = self.word_counts_dictionary[word]
