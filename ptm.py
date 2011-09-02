@@ -93,14 +93,14 @@ class Text(Splitter):
     '''
 
     @mem.memoized
-    def build_unique_vocabulary(self):
+    def build_unique_vocab(self):
         '''
         Construct a list of unique tokens, set number_of_uniques counter.
         '''
-        self.unique_vocabulary = []
+        self.unique_vocab = []
         for word,count in self.word_counts_dictionary.iteritems():
-            self.unique_vocabulary.append(word)
-        self.number_of_uniques = len(self.unique_vocabulary)
+            self.unique_vocab.append(word)
+        self.number_of_uniques = len(self.unique_vocab)
 
 
     @mem.memoized
@@ -108,18 +108,23 @@ class Text(Splitter):
         '''
         Construct an array of structure [[word_id(int), wordcount(int)], .. ].
         '''
-        self.build_unique_vocabulary()
+        self.build_unique_vocab()
         self.word_counts_array = np.zeros([self.number_of_uniques, 1], dtype=int)
-        for i,word in enumerate(self.unique_vocabulary):
+        for i,word in enumerate(self.unique_vocab):
             self.word_counts_array[i] = self.word_counts_dictionary[word]
 
 
     @mem.memoized
-    def build_subset_vocabulary(self, numerator, denominator):
+    def build_subset_vocab(self, numerator, denominator):
         '''
         Build a subset of the unique vocabulary to consider when modeling
         topics. Eliminiate stop words and words with counts that do not cross
         the numerator/denominator threshold.
         '''
-        self.build_unique_vocabulary()
+        self.build_unique_vocab()
         self.build_wordcounts_array()
+        self.subset_vocab_i = []
+        min_count = int((self.total_wordcount * float(numerator)) / denominator)
+        for i,count in enumerate(self.word_counts_array):
+            if count >= min_count and self.unique_vocab[i] not in self.stop_words:
+                self.subset_vocab_i.append(i)
