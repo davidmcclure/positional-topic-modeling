@@ -1,5 +1,6 @@
 import re
 import numpy as np
+import memoized
 
 # Force numpy to not truncate arrays when printing them.
 np.set_printoptions(threshold='nan')
@@ -46,28 +47,10 @@ class Splitter(object):
         '''
         f = open(Splitter.STOP_WORD_PATH)
         for word in [line for line in f]:
-            self.stop_words.append(self._clean_word(word, False))
+            self.stop_words.append(self._clean_word(word))
 
 
-    def split(self):
-        '''
-        Split file into an ordered list of words. Scrub out punctuation;
-        lowercase everything; preserve contractions; disallow strings that
-        include non-letters. En route, build a dictionary of {word: count}.
-        '''
-        self.lines = [line for line in self.file]
-        self.word_counts_dictionary = {}
-        for line in self.lines:
-            words = line.split(' ')
-            for word in words:
-                clean_word = self._clean_word(word)
-                if clean_word:
-                    self.words.append(clean_word)
-                    try: self.word_counts_dictionary[word] += 1
-                    except KeyError: self.word_counts_dictionary[word] = 1
-
-
-    def _clean_word(self, word, block_stop_words = True):
+    def _clean_word(self, word):
         '''
         Parses a space-delimited string from the text and determines whether or
         not it is a valid word. Scrubs punctuation, retains contraction
@@ -78,8 +61,27 @@ class Splitter(object):
         for punc in Splitter.PUNCTUATION + Splitter.CARRIAGE_RETURNS:
             word = word.replace(punc, '').strip("'")
         if not re.match(Splitter.WORD_REGEX, word): word = None
-        if block_stop_words and word in self.stop_words: word = None
         return word
+
+
+    def split(self):
+        '''
+        Split file into an ordered list of words. Scrub out punctuation;
+        lowercase everything; preserve contractions; disallow strings that
+        include non-letters. En route, build a dictionary of {word: count}.
+        '''
+        self.lines = [line for line in self.file]
+        self.word_counts_dictionary = {}
+        self.total_wordcount = 0
+        for line in self.lines:
+            words = line.split(' ')
+            for word in words:
+                self.total_wordcount += 1
+                clean_word = self._clean_word(word)
+                if clean_word:
+                    self.words.append(clean_word)
+                    try: self.word_counts_dictionary[word] += 1
+                    except KeyError: self.word_counts_dictionary[word] = 1
 
 
 
@@ -90,45 +92,23 @@ class Text(Splitter):
     texts strung together.
     '''
 
-
-    def __init__(self, filepath):
-        '''
-        Set up the _called set, which keeps track of which functions have been
-        called on the class. Used to manage dependencies among functions.
-        '''
-        Splitter.__init__(self, filepath)
-        self._called = set()
-        self._functions = {
-            'build_unique_vocabulary': self.build_unique_vocabulary,
-            'build_wordcounts_array': self.build_wordcounts_array
-        }
-
-
-    def _do_dependencies(self, dependencies):
-        '''
-        Executes a series of functions passed in as a list of strings.
-        '''
-        for function in dependencies:
-            if function not in self._called: self._functions[function]()
-
-
+    @memoized.memoized
     def build_unique_vocabulary(self):
         '''
         Construct a list of unique tokens, set number_of_uniques counter.
         '''
-        self._called.add('build_unique_vocabulary')
         self.unique_vocabulary = []
         for word,count in self.word_counts_dictionary.iteritems():
             self.unique_vocabulary.append(word)
         self.number_of_uniques = len(self.unique_vocabulary)
 
 
+    @memoized.memoized
     def build_wordcounts_array(self):
         '''
         Construct an array of structure [[word_id(int), wordcount(int)], .. ].
         '''
-        self._called.add('build_wordcounts_array')
-        self._do_dependencies(['build_unique_vocabulary'])
+        self.build_unique_vocabulary()
         self.word_counts_array = np.zeros([self.number_of_uniques, 1], dtype=int)
         for i,word in enumerate(self.unique_vocabulary):
             self.word_counts_array[i] = self.word_counts_dictionary[word]
