@@ -92,15 +92,23 @@ class Text(Splitter):
     texts strung together.
     '''
 
+    # Defaults for the ratio to use when deciding whether or not a word is to
+    # infrequent to include in the subset vocabulary.
+    DEF_NUMERATOR = 1
+    DEF_DENOMINATOR = 100000
+
     @mem.memoized
     def build_unique_vocab(self):
         '''
         Construct a list of unique tokens, set number_of_uniques counter.
         '''
         self.unique_vocab = []
+        self.word_index_dictionary = {}
         for word,count in self.word_counts_dictionary.iteritems():
             self.unique_vocab.append(word)
         self.number_of_uniques = len(self.unique_vocab)
+        for i, word in enumerate(self.unique_vocab):
+            self.word_index_dictionary[word] = i
 
 
     @mem.memoized
@@ -128,3 +136,39 @@ class Text(Splitter):
         for i,count in enumerate(self.word_counts_array):
             if count >= min_count and self.unique_vocab[i] not in self.stop_words:
                 self.subset_vocab_i.append(i)
+
+
+    @mem.memoized
+    def build_subset_text_word_positions(self):
+        '''
+        Build a list of tuples of structure (id,position) in which the id is an
+        index in subset_vocab_i and the position is the ordered position of the
+        word in the text.
+        '''
+        self.build_unique_vocab()
+        self.build_wordcounts_array()
+        self.build_subset_vocab(Text.DEF_NUMERATOR, Text.DEF_DENOMINATOR)
+        self.subset_text_word_positions = []
+        for i,word in enumerate(self.words):
+            word_index = self.word_index_dictionary[word]
+            if word_index in self.subset_vocab_i:
+                self.subset_text_word_positions.append((word_index, i+1))
+
+
+    @mem.memoized
+    def build_positions_list(self):
+        '''
+        Build a list of structure list[i] = [x,y,z,...], where i is the index
+        of the word in subset_vocab_i and x,y,z,... are the positions of each
+        instance of the word in the text.
+        '''
+        self.build_unique_vocab()
+        self.build_wordcounts_array()
+        self.build_subset_vocab(Text.DEF_NUMERATOR, Text.DEF_DENOMINATOR)
+        self.build_subset_text_word_positions()
+        self.positions = []
+        for i in self.subset_vocab_i:
+            w_positions = []
+            for id_pos in self.subset_text_word_positions:
+                if id_pos[0] == i: w_positions.append(id_pos[1])
+            self.positions.append(w_positions)
