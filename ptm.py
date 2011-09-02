@@ -4,6 +4,7 @@ import numpy as np
 # Force numpy to not truncate arrays when printing them.
 np.set_printoptions(threshold='nan')
 
+
 class Splitter(object):
 
     '''
@@ -14,11 +15,14 @@ class Splitter(object):
     # which is handled separately so as to retain contractions.
     PUNCTUATION = ['(', ')', ':', ';', ',', '-', '!', '.', '?', '/', '"', '*']
 
+    # Relative location of line-delimited list of stop words.
+    STOP_WORD_PATH = 'stop_words.txt'
+
     # Carriage return strings, on *nix and windows.
     CARRIAGE_RETURNS = ['\n', '\r\n']
 
-    # Final sanity-check regex to run on words before they get
-    # pushed onto the core words list.
+    # Final sanity-check regex to run on words before they get pushed onto the
+    # core words list.
     WORD_REGEX = "^[a-z']+$"
 
 
@@ -31,7 +35,18 @@ class Splitter(object):
         self.file = open(self.filepath)
         self.lines = []
         self.words = []
+        self.stop_words = []
+        self._load_stopwords()
         self.split()
+
+
+    def _load_stopwords(self):
+        '''
+        Read list of stop words out of file.
+        '''
+        f = open(Splitter.STOP_WORD_PATH)
+        for word in [line for line in f]:
+            self.stop_words.append(self._clean_word(word, False))
 
 
     def split(self):
@@ -54,7 +69,7 @@ class Splitter(object):
                         self.word_counts_dictionary[word] += 1
 
 
-    def _clean_word(self, word):
+    def _clean_word(self, word, block_stop_words = True):
         '''
         Parses a space-delimited string from the text and determines whether or
         not it is a valid word. Scrubs punctuation, retains contraction
@@ -64,7 +79,10 @@ class Splitter(object):
         word = word.lower()
         for punc in Splitter.PUNCTUATION + Splitter.CARRIAGE_RETURNS:
             word = word.replace(punc, '').strip("'")
-        return word if re.match(Splitter.WORD_REGEX, word) else None
+        if not re.match(Splitter.WORD_REGEX, word): word = None
+        if block_stop_words and word in self.stop_words: word = None
+        return word
+
 
 
 class Text(Splitter):
@@ -73,6 +91,7 @@ class Text(Splitter):
     An ordered series of words. Could be a single long text, or a series of
     texts strung together.
     '''
+
 
     def __init__(self, filepath):
         '''
@@ -86,12 +105,14 @@ class Text(Splitter):
             'build_wordcounts_array': self.build_wordcounts_array
         }
 
+
     def _do_dependencies(self, dependencies):
         '''
         Executes a series of functions passed in as a list of strings.
         '''
         for function in dependencies:
             if function not in self._called: self._functions[function]()
+
 
     def build_unique_vocabulary(self):
         '''
@@ -102,6 +123,7 @@ class Text(Splitter):
         for word,count in self.word_counts_dictionary.iteritems():
             self.unique_vocabulary.append(word)
         self.number_of_uniques = len(self.unique_vocabulary)
+
 
     def build_wordcounts_array(self):
         '''
