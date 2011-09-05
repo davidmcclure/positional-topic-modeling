@@ -214,7 +214,7 @@ class Text(Splitter):
         for j,i in enumerate(self.subset_vocab_i):
             other_word_positions = self.positions[j]
             score = getattr(comparers, Text.DEF_COMPARER)(word_positions, other_word_positions)
-            scores.append([self.unique_vocab[i], score])
+            scores.append((self.unique_vocab[i], score))
         scores = sorted(scores, key=itemgetter(1))
         if truncate: scores = scores[:truncate]
         return scores
@@ -235,7 +235,7 @@ class Text(Splitter):
         for j,i in enumerate(self.subset_vocab_i):
             other_word_positions = self.positions[j]
             score = getattr(comparers, Text.DEF_COMPARER)(word_positions, other_word_positions)
-            scores.append([self.unique_vocab[i], score])
+            scores.append((self.unique_vocab[i], score))
         scores = sorted(scores, key=itemgetter(1))
         if truncate: scores = scores[:truncate]
         return scores
@@ -251,7 +251,7 @@ class Text(Splitter):
         self.build_subset_text_word_positions()
         self.build_positions_list()
         self.positional_similarity_stacks = []
-        counter = 0; # convenience progress counter.
+        counter = 0; # progress counter.
         for i,word in enumerate(self.subset_vocab_i):
             stack = self.build_positional_similarity_stack_for_subset_id(i)
             self.positional_similarity_stacks.append(stack)

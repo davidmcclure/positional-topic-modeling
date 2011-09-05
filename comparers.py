@@ -1,8 +1,6 @@
-# A library of comparer functions, each of which performs the core task of
-# figuring out whether a positions list b should be considered "clumped" with
-# position list a. There are many different ways of doing this, each of which
-# reflects different assumptions and intuitions about how to identify
-# meaningful correlations.
+# A library of comparer functions, each of which returns a integer coefficient
+# that represents a metric that can be thought of as the "clumpiness" or "average
+# radial distance" between the two word-position sets a and b.
 
 import utilities as ut
 
