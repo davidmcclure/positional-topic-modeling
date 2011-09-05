@@ -10,9 +10,9 @@ def _CMP_closest_neighbor_average_distance(a, b):
     the radial distance. Return the average of the radii.
     '''
     radii = []
-    for i in b:
-        sub_radii = []
-        for j in a:
-            sub_radii.append(abs(j-i))
-        radii.append(min(sub_radii))
-    return ut.__avg(radii)
+    for b_index in b:
+        per_index_radii = []
+        for a_index in a:
+            per_index_radii.append(abs(a_index-b_index))
+        radii.append(min(per_index_radii))
+    return int(float(sum(radii))/len(radii))
