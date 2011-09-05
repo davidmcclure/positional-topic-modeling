@@ -99,8 +99,11 @@ class Text(Splitter):
     DEF_NUMERATOR = 5
     DEF_DENOMINATOR = 100000
 
-    # Default comparer to user.
+    # Default comparer to use.
     DEF_COMPARER = '_CMP_closest_neighbor_average_distance'
+
+    # Default parameterizer to use.
+    DEF_PARAMETERIZER = '_PARAM_number_of_words_to_hit_1000'
 
     @mem.memoized
     def build_unique_vocab(self):
