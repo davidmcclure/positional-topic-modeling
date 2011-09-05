@@ -141,6 +141,7 @@ class Text(Splitter):
         for i,count in enumerate(self.word_counts_array):
             if count >= min_count and self.unique_vocab[i] not in self.stop_words:
                 self.subset_vocab_i.append(i)
+        self.subset_count = len(self.subset_vocab_i)
 
 
     @mem.memoized
@@ -197,6 +198,7 @@ class Text(Splitter):
             return None
 
 
+    # console helper
     def build_positional_similarity_stack_for_word(self, word, truncate=None):
         '''
         For the provided word, run through each of the other words and call the
@@ -218,6 +220,27 @@ class Text(Splitter):
         return scores
 
 
+    def build_positional_similarity_stack_for_subset_id(self, index, truncate=None):
+        '''
+        For the provided subset_id index, run through each of the other words and call the
+        specified comparer function. Then, sort the list ascending.
+        '''
+        self.build_unique_vocab()
+        self.build_wordcounts_array()
+        self.build_subset_vocab(Text.DEF_NUMERATOR, Text.DEF_DENOMINATOR)
+        self.build_subset_text_word_positions()
+        self.build_positions_list()
+        scores = [] # tuple of (word_id, score)
+        word_positions = self.positions[index]
+        for j,i in enumerate(self.subset_vocab_i):
+            other_word_positions = self.positions[j]
+            score = getattr(comparers, Text.DEF_COMPARER)(word_positions, other_word_positions)
+            scores.append([self.unique_vocab[i], score])
+        scores = sorted(scores, key=itemgetter(1))
+        if truncate: scores = scores[:truncate]
+        return scores
+
+
     def build_positional_similarity_stacks_for_all_words(self):
         '''
         Build position similarity stacks for all words.
@@ -228,5 +251,10 @@ class Text(Splitter):
         self.build_subset_text_word_positions()
         self.build_positions_list()
         self.positional_similarity_stacks = []
-        # do
-
+        counter = 0; # convenience progress counter.
+        for i,word in enumerate(self.subset_vocab_i):
+            stack = self.build_positional_similarity_stack_for_subset_id(i)
+            self.positional_similarity_stacks.append(stack)
+            # progress output.
+            counter += 1
+            print str(counter) + ' / ' + str(self.subset_count)
