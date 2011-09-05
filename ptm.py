@@ -197,7 +197,6 @@ class Text(Splitter):
             return None
 
 
-    # console helper
     def build_positional_similarity_stack_for_word(self, word, truncate=None):
         '''
         For the provided word, run through each of the other words and call the
@@ -217,4 +216,17 @@ class Text(Splitter):
         scores = sorted(scores, key=itemgetter(1))
         if truncate: scores = scores[:truncate]
         return scores
+
+
+    def build_positional_similarity_stacks_for_all_words(self):
+        '''
+        Build position similarity stacks for all words.
+        '''
+        self.build_unique_vocab()
+        self.build_wordcounts_array()
+        self.build_subset_vocab(Text.DEF_NUMERATOR, Text.DEF_DENOMINATOR)
+        self.build_subset_text_word_positions()
+        self.build_positions_list()
+        self.positional_similarity_stacks = []
+        # do
 
