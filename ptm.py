@@ -238,7 +238,7 @@ class Text(Splitter):
         for j,i in enumerate(self.subset_vocab_i):
             other_word_positions = self.positions[j]
             score = getattr(comparers, Text.DEF_COMPARER)(word_positions, other_word_positions)
-            scores.append((self.unique_vocab[i], score))
+            scores.append((i, score))
         scores = sorted(scores, key=itemgetter(1))
         if truncate: scores = scores[:truncate]
         return scores
