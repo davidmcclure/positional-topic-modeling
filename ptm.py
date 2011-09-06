@@ -254,10 +254,6 @@ class Text(Splitter):
         self.build_subset_text_word_positions()
         self.build_positions_list()
         self.positional_similarity_stacks = []
-        counter = 0; # progress counter.
         for i,word in enumerate(self.subset_vocab_i):
             stack = self.build_positional_similarity_stack_for_subset_id(i)
             self.positional_similarity_stacks.append(stack)
-            # progress output.
-            counter += 1
-            print str(counter) + ' / ' + str(self.subset_count)
