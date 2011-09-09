@@ -6,8 +6,6 @@
 # distance metric). When iterating over s, always slice at [1:] to scrub out
 # the identity listing at the top of the stack.
 
-import utilities as ut
-
 def _PARAM_number_of_words_to_hit_1000(s):
     '''
     Count the number of words in the stack that it takes for the distance
