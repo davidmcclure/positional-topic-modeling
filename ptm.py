@@ -1,7 +1,9 @@
 import re
 import numpy as np
+import time
 import memoized as mem
 import comparers
+import pickle
 from operator import itemgetter
 
 # Force numpy to not truncate arrays when printing them.
@@ -104,6 +106,9 @@ class Text(Splitter):
 
     # Default parameterizer to use.
     DEF_PARAMETERIZER = '_PARAM_number_of_words_to_hit_1000'
+
+    # Directory to save and read pickles.
+    PICKLES_DIR = 'pickles/'
 
     @mem.memoized
     def build_unique_vocab(self):
@@ -257,3 +262,23 @@ class Text(Splitter):
         for i,word in enumerate(self.subset_vocab_i):
             stack = self.build_positional_similarity_stack_for_subset_id(i)
             self.positional_similarity_stacks.append(stack)
+
+
+    def pickle_similarity_stacks(self):
+        '''
+        Pickle the similarity stacks.
+        '''
+        self.build_unique_vocab()
+        self.build_wordcounts_array()
+        self.build_subset_vocab(Text.DEF_NUMERATOR, Text.DEF_DENOMINATOR)
+        self.build_subset_text_word_positions()
+        self.build_positions_list()
+        self.build_positional_similarity_stacks_for_all_words()
+        filename = Text.DEF_COMPARER + str(int(time.time())) + '.pkl'
+        output = open(filename, 'wb')
+        pickle.dump(self.positional_similarity_stacks)
+        output.close()
+
+
+
+
