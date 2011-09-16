@@ -1,2 +1,3 @@
 import ptm
-wp = ptm.Text('texts/war_and_peace.txt')
+p = ptm.Text('texts/paradise_lost.txt')
+clumps = p.build_unconsolidated_topic_clumps(2000)

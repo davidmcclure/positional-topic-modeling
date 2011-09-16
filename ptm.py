@@ -341,6 +341,8 @@ class Text(Splitter):
         clumps = []
         free_agents = []
 
+        total_positions = len(self.positions)
+
         for i,positions in enumerate(self.positions):
             free_agents.append([i,positions, True])
 
@@ -370,6 +372,6 @@ class Text(Splitter):
                             free_agent[2] = False
                             break
 
-            print str(i) + ' / ' + str(len(self.positions))
+            print str(i) + ' / ' + str(total_positions)
 
         return clumps
